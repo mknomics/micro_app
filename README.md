@@ -4,13 +4,17 @@ An interactive tool for calculating price elasticity and cross-price elasticity 
 
 ## Launch Interactive App
 
-### Full Version (Original)
-**[Launch Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Complete analysis tool with detailed explanations
+### Google Colab (Recommended - Fastest)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mknomics/teaching_intro_price_optimization/blob/main/Elasticity_Tool.ipynb)
 
-### Simple Version (Single Cell)
-**[Launch Simple Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool_Simple.ipynb)** - Streamlined version with core functionality
+**[Launch in Google Colab](https://colab.research.google.com/github/mknomics/teaching_intro_price_optimization/blob/main/Elasticity_Tool.ipynb)** - Runs on Google's servers with full Python environment
 
-*Both versions run entirely in your browser using WebAssembly - no installation required!*
+### JupyterLite (Browser-Based)
+**[Full Version](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Complete analysis tool with detailed explanations
+
+**[Simple Version](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool_Simple.ipynb)** - Streamlined version with core functionality
+
+*JupyterLite runs entirely in your browser using WebAssembly - no installation required but may be slower than Colab*
 
 ## Features
 
