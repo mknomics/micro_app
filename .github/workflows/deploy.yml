@@ -29,16 +29,13 @@ jobs:
 
       - name: Build JupyterLite
         run: |
-          # Copy notebook and data files to root for JupyterLite to find them
-          cp content/*.ipynb .
-          cp content/*.csv .
+          # JupyterLite expects files in a 'files' directory at the root
+          mkdir -p files
+          cp content/Elasticity_Tool.ipynb files/
+          cp content/soda.csv files/
 
-          # Build JupyterLite site
-          jupyter lite build
-
-          # Check what was built
-          echo "Contents of _output:"
-          ls -la _output/
+          # Build JupyterLite with the files directory as content
+          jupyter lite build --files files --output-dir _output
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
