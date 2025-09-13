@@ -27,9 +27,11 @@ jobs:
 
       - name: Build JupyterLite
         run: |
-          mkdir -p _output
-          cp -r content/* .
-          jupyter lite build --output-dir _output
+          echo "Contents of content directory:"
+          ls -la content/
+          jupyter lite build --contents content --output-dir _output
+          echo "Contents of _output/files directory:"
+          ls -la _output/files/ || echo "No files directory"
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3

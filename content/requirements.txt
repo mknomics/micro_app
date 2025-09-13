@@ -1,6 +1,0 @@
-# Packages for JupyterLite (using Pyodide)
-pandas
-numpy
-matplotlib
-scikit-learn
-ipywidgets
