@@ -18,20 +18,23 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install JupyterLite
         run: |
-          python -m pip install jupyterlite-core==0.2.0 jupyterlite-pyodide-kernel==0.2.0
+          python -m pip install --upgrade pip
+          python -m pip install jupyterlite-core jupyterlite-pyodide-kernel
 
       - name: Build JupyterLite
         run: |
-          jupyter lite build --contents content --output-dir dist
+          mkdir -p _output
+          cp -r content/* .
+          jupyter lite build --output-dir _output
 
-      - name: Upload artifact
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: _output
 
   deploy:
     needs: build
