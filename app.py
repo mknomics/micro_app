@@ -26,6 +26,14 @@ df_city = df_city.pivot(index='date', columns=['city','brand','container'], valu
 brands = ['adult-cola', 'gazoza', 'kinder-cola', 'lemon-boost', 'orange-power']
 containers = ['plastic', 'can', 'glass']
 
+# Calculate price ranges for each product
+def get_price_range(brand, container):
+    try:
+        prices = df_city['mean_p']['Athens'][brand][container].values
+        return float(np.min(prices)), float(np.max(prices))
+    except:
+        return 0.5, 5.0  # Default range if error
+
 # App layout
 app.layout = html.Div([
     html.Div([
@@ -147,6 +155,52 @@ app.layout = html.Div([
     ], style={'marginTop': '40px', 'padding': '20px', 'backgroundColor': '#f8f9fa',
               'borderRadius': '10px'})
 ], style={'padding': '20px', 'fontFamily': 'Arial, sans-serif', 'backgroundColor': '#ecf0f1'})
+
+# Callback to update own-price slider range
+@app.callback(
+    [Output('own-price-slider', 'min'),
+     Output('own-price-slider', 'max'),
+     Output('own-price-slider', 'value'),
+     Output('own-price-slider', 'marks')],
+    [Input('own-brand-dropdown', 'value'),
+     Input('own-container-dropdown', 'value')]
+)
+def update_own_price_slider(brand, container):
+    min_price, max_price = get_price_range(brand, container)
+    # Add some padding to the range
+    min_price = min_price * 0.8
+    max_price = max_price * 1.2
+    value = (min_price + max_price) / 2
+
+    # Create marks at reasonable intervals
+    step = (max_price - min_price) / 4
+    marks = {round(min_price + i * step, 2): f'${round(min_price + i * step, 2):.2f}'
+             for i in range(5)}
+
+    return min_price, max_price, value, marks
+
+# Callback to update cross-price slider range
+@app.callback(
+    [Output('cross-price-slider', 'min'),
+     Output('cross-price-slider', 'max'),
+     Output('cross-price-slider', 'value'),
+     Output('cross-price-slider', 'marks')],
+    [Input('cross-brand2-dropdown', 'value'),
+     Input('cross-container2-dropdown', 'value')]
+)
+def update_cross_price_slider(brand, container):
+    min_price, max_price = get_price_range(brand, container)
+    # Add some padding to the range
+    min_price = min_price * 0.8
+    max_price = max_price * 1.2
+    value = (min_price + max_price) / 2
+
+    # Create marks at reasonable intervals
+    step = (max_price - min_price) / 4
+    marks = {round(min_price + i * step, 2): f'${round(min_price + i * step, 2):.2f}'
+             for i in range(5)}
+
+    return min_price, max_price, value, marks
 
 # Callback for own-price elasticity
 @app.callback(
