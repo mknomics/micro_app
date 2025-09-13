@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - '*'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,35 +22,31 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install JupyterLite
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install jupyterlite-core jupyterlite-pyodide-kernel
 
       - name: Build JupyterLite
         run: |
-          echo "Contents of content directory:"
-          ls -la content/
-          jupyter lite build --contents content --output-dir _output
-          echo "Contents of _output/files directory:"
-          ls -la _output/files/ || echo "No files directory"
+          # Copy notebook and data files to root for JupyterLite to find them
+          cp content/*.ipynb .
+          cp content/*.csv .
 
-      - name: Upload GitHub Pages artifact
+          # Build JupyterLite site
+          jupyter lite build
+
+          # Check what was built
+          echo "Contents of _output:"
+          ls -la _output/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: _output
 
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v4
