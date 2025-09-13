@@ -4,11 +4,7 @@ An interactive tool for calculating price elasticity and cross-price elasticity 
 
 ## Launch Interactive App
 
-### Option 1: JupyterLite (Runs in Browser - No Server!)
-**[Launch with JupyterLite](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Runs entirely in your browser using WebAssembly
-
-### Option 2: MyBinder (Full Python Environment)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mknomics/micro_app/HEAD?urlpath=voila%2Frender%2FElasticity_Tool.ipynb)
+**[Launch Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Runs entirely in your browser using WebAssembly
 
 ## Features
 
@@ -17,21 +13,9 @@ An interactive tool for calculating price elasticity and cross-price elasticity 
 - **Market Analysis**: Compare cross-price elasticities across all competing brands
 - **Interactive Visualizations**: Real-time plots showing price-quantity relationships
 
-## Local Setup
+## How It Works
 
-If you want to run this locally:
-
-```bash
-# Clone the repository
-git clone https://github.com/mknomics/micro_app.git
-cd micro_app
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run with Voilà
-voila Elasticity_Tool.ipynb
-```
+This app runs entirely in your browser using JupyterLite and WebAssembly. No installation required - just click the link above and start calculating elasticities!
 
 ## Data Source
 
@@ -39,7 +23,7 @@ The tool uses real soda sales data from Athens, analyzing five brands across thr
 
 ## Technologies Used
 
-- **Voilà**: Turns Jupyter notebooks into standalone web applications
+- **JupyterLite**: Browser-based Jupyter environment using WebAssembly
 - **ipywidgets**: Interactive widgets for parameter selection
 - **pandas**: Data manipulation and analysis
 - **scikit-learn**: Linear regression for elasticity calculations
@@ -47,8 +31,10 @@ The tool uses real soda sales data from Athens, analyzing five brands across thr
 
 ## How to Use
 
-1. Click the Binder badge above to launch the app
-2. Select brand and container type from the dropdown menus
-3. Adjust the price slider to your desired price point
-4. Click the appropriate button to calculate elasticity
-5. View the results and visualizations
+1. Click the launch link above to open the tool
+2. Wait for the Python packages to install (first-time only)
+3. Run all cells to initialize the interactive widgets
+4. Select brand and container type from the dropdown menus
+5. Adjust the price slider to your desired price point
+6. Click the appropriate button to calculate elasticity
+7. View the results and visualizations
