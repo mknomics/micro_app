@@ -8,5 +8,14 @@
       "jupyterlab-kernel-spy",
       "jupyterlab-tour"
     ]
+  },
+  "jupyter-lite-config": {
+    "pipliteUrls": [
+      "https://files.pythonhosted.org/packages/py3/i/ipywidgets/ipywidgets-8.1.1-py3-none-any.whl",
+      "https://files.pythonhosted.org/packages/py3/p/pandas/pandas-2.1.4-cp311-cp311-pyodide_2024_0_wasm32.whl",
+      "https://files.pythonhosted.org/packages/py3/n/numpy/numpy-1.26.2-cp311-cp311-pyodide_2024_0_wasm32.whl",
+      "https://files.pythonhosted.org/packages/py3/m/matplotlib/matplotlib-3.8.2-cp311-cp311-pyodide_2024_0_wasm32.whl",
+      "https://files.pythonhosted.org/packages/py3/s/scikit_learn/scikit_learn-1.3.2-cp311-cp311-pyodide_2024_0_wasm32.whl"
+    ]
   }
 }
