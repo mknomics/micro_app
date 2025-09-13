@@ -25,17 +25,12 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install jupyterlite-core jupyterlite-pyodide-kernel
+          python -m pip install jupyterlite-core jupyterlite-pyodide-kernel jupyter-server
 
       - name: Build JupyterLite
         run: |
-          # JupyterLite expects files in a 'files' directory at the root
-          mkdir -p files
-          cp content/Elasticity_Tool.ipynb files/
-          cp content/soda.csv files/
-
-          # Build JupyterLite with the files directory as content
-          jupyter lite build --files files --output-dir _output
+          # Build JupyterLite with content directory
+          jupyter lite build --contents content --output-dir _output
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
