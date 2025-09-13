@@ -4,7 +4,13 @@ An interactive tool for calculating price elasticity and cross-price elasticity 
 
 ## Launch Interactive App
 
-**[Launch Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Runs entirely in your browser using WebAssembly
+### Full Version (Original)
+**[Launch Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Complete analysis tool with detailed explanations
+
+### Simple Version (Single Cell)
+**[Launch Simple Elasticity Tool](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool_Simple.ipynb)** - Streamlined version with core functionality
+
+*Both versions run entirely in your browser using WebAssembly - no installation required!*
 
 ## Features
 
