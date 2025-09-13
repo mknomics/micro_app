@@ -1,16 +1,12 @@
 {
   "jupyter-lite-schema-version": 0,
   "jupyter-config-data": {
-    "appUrl": "/lab",
+    "baseUrl": "./",
+    "appUrl": "./lab",
     "disabledExtensions": [
       "@jupyterlab/drawio-extension",
       "jupyterlab-kernel-spy",
       "jupyterlab-tour"
-    ],
-    "settingsOverrides": {
-      "@jupyterlab/apputils-extension:themes": {
-        "theme": "JupyterLab Dark"
-      }
-    }
+    ]
   }
 }
