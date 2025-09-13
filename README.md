@@ -5,7 +5,7 @@ An interactive tool for calculating price elasticity and cross-price elasticity 
 ## Launch Interactive App
 
 ### Option 1: JupyterLite (Runs in Browser - No Server!)
-**[Launch with JupyterLite](https://mknomics.github.io/micro_app/)** - Runs entirely in your browser using WebAssembly
+**[Launch with JupyterLite](https://mknomics.github.io/micro_app/lab/index.html?path=Elasticity_Tool.ipynb)** - Runs entirely in your browser using WebAssembly
 
 ### Option 2: MyBinder (Full Python Environment)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mknomics/micro_app/HEAD?urlpath=voila%2Frender%2FElasticity_Tool.ipynb)
