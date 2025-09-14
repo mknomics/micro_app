@@ -37,6 +37,7 @@ def get_price_range(brand, container):
 # App layout
 app.layout = html.Div([
     html.Div([
+        html.H1('Newberry College', style={'textAlign': 'center', 'color': 'crimson', 'fontSize': '48px', 'fontWeight': 'bold', 'marginBottom': '10px'}),
         html.H1('Elasticity Analysis Tool', style={'textAlign': 'center', 'color': '#2c3e50'}),
         html.P('Athens Soda Market Data Analysis', style={'textAlign': 'center', 'fontSize': '18px', 'color': '#7f8c8d'}),
         html.Hr()
@@ -84,6 +85,7 @@ app.layout = html.Div([
                                  'fontSize': '16px', 'cursor': 'pointer'}),
 
                 html.Div(id='own-elasticity-output', style={'marginTop': '20px'}),
+                html.Div(id='own-quiz-section', style={'marginTop': '20px'}),
                 dcc.Graph(id='own-price-graph', style={'marginTop': '20px'})
             ])
         ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top',
@@ -141,6 +143,7 @@ app.layout = html.Div([
                                  'fontSize': '16px', 'cursor': 'pointer'}),
 
                 html.Div(id='cross-elasticity-output', style={'marginTop': '20px'}),
+                html.Div(id='cross-quiz-section', style={'marginTop': '20px'}),
                 dcc.Graph(id='cross-price-graph', style={'marginTop': '20px'})
             ])
         ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top',
@@ -205,7 +208,8 @@ def update_cross_price_slider(brand, container):
 # Callback for own-price elasticity
 @app.callback(
     [Output('own-elasticity-output', 'children'),
-     Output('own-price-graph', 'figure')],
+     Output('own-price-graph', 'figure'),
+     Output('own-quiz-section', 'children')],
     [Input('own-elasticity-button', 'n_clicks')],
     [State('own-brand-dropdown', 'value'),
      State('own-container-dropdown', 'value'),
@@ -248,35 +252,42 @@ def calculate_own_price_elasticity(n_clicks, brand, container, price_point):
             hovermode='closest'
         )
 
-        # Interpretation
-        if elasticity < -1:
-            interpretation = 'Demand is ELASTIC (responsive to price changes)'
-            color = 'green'
-        elif elasticity > -1 and elasticity < 0:
-            interpretation = 'Demand is INELASTIC (less responsive to price changes)'
-            color = 'orange'
-        else:
-            interpretation = 'Unusual elasticity value - check data'
-            color = 'red'
-
         result = html.Div([
             html.H4(f'Own-Price Elasticity: {elasticity:.3f}'),
-            html.P(interpretation, style={'color': color, 'fontWeight': 'bold'}),
             html.P(f'At price ${price_point:.2f}, estimated quantity: {Q_hat[0][0]:.0f}')
         ])
 
-        return result, fig
+        quiz_section = html.Div([
+            html.H5('Quiz: What type of demand is this?', style={'marginTop': '20px'}),
+            dcc.RadioItems(
+                id='own-elasticity-quiz',
+                options=[
+                    {'label': 'Elastic (responsive to price changes)', 'value': 'elastic'},
+                    {'label': 'Inelastic (less responsive to price changes)', 'value': 'inelastic'},
+                    {'label': 'Unit elastic (proportional response)', 'value': 'unit'}
+                ],
+                style={'marginTop': '10px'}
+            ),
+            html.Button('Submit Answer', id='own-quiz-submit',
+                       style={'marginTop': '10px', 'padding': '5px 15px',
+                             'backgroundColor': '#2ecc71', 'color': 'white',
+                             'border': 'none', 'borderRadius': '3px'}),
+            html.Div(id='own-quiz-feedback', style={'marginTop': '10px'})
+        ], style={'backgroundColor': '#f0f8ff', 'padding': '15px', 'borderRadius': '5px'})
+
+        return result, fig, quiz_section
 
     except Exception as e:
         error_msg = html.Div([
             html.P(f'Error: {str(e)}', style={'color': 'red'})
         ])
-        return error_msg, go.Figure()
+        return error_msg, go.Figure(), html.Div()
 
 # Callback for cross-price elasticity
 @app.callback(
     [Output('cross-elasticity-output', 'children'),
-     Output('cross-price-graph', 'figure')],
+     Output('cross-price-graph', 'figure'),
+     Output('cross-quiz-section', 'children')],
     [Input('cross-elasticity-button', 'n_clicks')],
     [State('cross-brand1-dropdown', 'value'),
      State('cross-container1-dropdown', 'value'),
@@ -323,30 +334,130 @@ def calculate_cross_price_elasticity(n_clicks, brand1, container1, brand2, conta
             hovermode='closest'
         )
 
-        # Interpretation
-        if cross_elasticity > 0.1:
-            interpretation = 'Products are SUBSTITUTES (price increase of one increases demand for other)'
-            color = 'blue'
-        elif cross_elasticity < -0.1:
-            interpretation = 'Products are COMPLEMENTS (price increase of one decreases demand for other)'
-            color = 'green'
-        else:
-            interpretation = 'Products are relatively INDEPENDENT (minimal cross-price effect)'
-            color = 'gray'
-
         result = html.Div([
             html.H4(f'Cross-Price Elasticity: {cross_elasticity:.3f}'),
-            html.P(interpretation, style={'color': color, 'fontWeight': 'bold'}),
             html.P(f'{brand2} price effect on {brand1} demand at ${price_point:.2f}')
         ])
 
-        return result, fig
+        cross_quiz_section = html.Div([
+            html.H5('Quiz: What is the relationship between these products?', style={'marginTop': '20px'}),
+            dcc.RadioItems(
+                id='cross-elasticity-quiz',
+                options=[
+                    {'label': 'Substitutes (competing products)', 'value': 'substitutes'},
+                    {'label': 'Complements (used together)', 'value': 'complements'},
+                    {'label': 'Independent (no relationship)', 'value': 'independent'}
+                ],
+                style={'marginTop': '10px'}
+            ),
+            html.Button('Submit Answer', id='cross-quiz-submit',
+                       style={'marginTop': '10px', 'padding': '5px 15px',
+                             'backgroundColor': '#2ecc71', 'color': 'white',
+                             'border': 'none', 'borderRadius': '3px'}),
+            html.Div(id='cross-quiz-feedback', style={'marginTop': '10px'})
+        ], style={'backgroundColor': '#f0f8ff', 'padding': '15px', 'borderRadius': '5px'})
+
+        return result, fig, cross_quiz_section
 
     except Exception as e:
         error_msg = html.Div([
             html.P(f'Error: {str(e)}', style={'color': 'red'})
         ])
-        return error_msg, go.Figure()
+        return error_msg, go.Figure(), html.Div()
+
+# Quiz callback for own-price elasticity
+@app.callback(
+    Output('own-quiz-feedback', 'children'),
+    [Input('own-quiz-submit', 'n_clicks')],
+    [State('own-elasticity-quiz', 'value'),
+     State('own-brand-dropdown', 'value'),
+     State('own-container-dropdown', 'value'),
+     State('own-price-slider', 'value')]
+)
+def check_own_elasticity_quiz(n_clicks, user_answer, brand, container, price_point):
+    if n_clicks is None or user_answer is None:
+        return ''
+
+    try:
+        Qx = df_city['mean_q']['Athens'][brand][container].values.reshape(-1,1)
+        Px = df_city['mean_p']['Athens'][brand][container].values.reshape(-1,1)
+        reg = LinearRegression().fit(Px, Qx)
+        Q_hat = reg.predict(np.array(price_point).reshape(-1, 1))
+        elasticity = reg.coef_[0][0] * (price_point / Q_hat[0][0])
+
+        if elasticity < -1:
+            correct_answer = 'elastic'
+            explanation = 'Demand is ELASTIC (responsive to price changes)'
+        elif elasticity > -1 and elasticity < 0:
+            correct_answer = 'inelastic'
+            explanation = 'Demand is INELASTIC (less responsive to price changes)'
+        else:
+            correct_answer = 'unit'
+            explanation = 'Demand is UNIT ELASTIC (proportional response)'
+
+        if user_answer == correct_answer:
+            return html.Div([
+                html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
+                html.P(explanation, style={'color': 'green'})
+            ])
+        else:
+            return html.Div([
+                html.P('✗ Incorrect', style={'color': 'red', 'fontWeight': 'bold', 'fontSize': '18px'}),
+                html.P(f'The correct answer is: {explanation}', style={'color': 'red'})
+            ])
+
+    except Exception:
+        return html.P('Error calculating quiz result', style={'color': 'red'})
+
+# Quiz callback for cross-price elasticity
+@app.callback(
+    Output('cross-quiz-feedback', 'children'),
+    [Input('cross-quiz-submit', 'n_clicks')],
+    [State('cross-elasticity-quiz', 'value'),
+     State('cross-brand1-dropdown', 'value'),
+     State('cross-container1-dropdown', 'value'),
+     State('cross-brand2-dropdown', 'value'),
+     State('cross-container2-dropdown', 'value'),
+     State('cross-price-slider', 'value')]
+)
+def check_cross_elasticity_quiz(n_clicks, user_answer, brand1, container1, brand2, container2, price_point):
+    if n_clicks is None or user_answer is None:
+        return ''
+
+    try:
+        Qx = df_city['mean_q']['Athens'][brand1][container1].values.reshape(-1,1)
+        Px1 = df_city['mean_p']['Athens'][brand1][container1].values.reshape(-1,1)
+        Px2 = df_city['mean_p']['Athens'][brand2][container2].values.reshape(-1,1)
+        Px = np.concatenate((Px1, Px2), axis=1)
+        reg = LinearRegression().fit(Px, Qx)
+        mPx1 = np.mean(Px1)
+        P = np.array([[mPx1, price_point]])
+        Q_hat = reg.predict(P)
+        cross_elasticity = reg.coef_[0][1] * (price_point / Q_hat[0][0])
+
+        if cross_elasticity > 0.1:
+            correct_answer = 'substitutes'
+            explanation = 'Products are SUBSTITUTES (competing products)'
+        elif cross_elasticity < -0.1:
+            correct_answer = 'complements'
+            explanation = 'Products are COMPLEMENTS (used together)'
+        else:
+            correct_answer = 'independent'
+            explanation = 'Products are relatively INDEPENDENT (no relationship)'
+
+        if user_answer == correct_answer:
+            return html.Div([
+                html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
+                html.P(explanation, style={'color': 'green'})
+            ])
+        else:
+            return html.Div([
+                html.P('✗ Incorrect', style={'color': 'red', 'fontWeight': 'bold', 'fontSize': '18px'}),
+                html.P(f'The correct answer is: {explanation}', style={'color': 'red'})
+            ])
+
+    except Exception:
+        return html.P('Error calculating quiz result', style={'color': 'red'})
 
 # Callback for data preview
 @app.callback(
