@@ -1,6 +1,6 @@
 import os
 import dash
-from dash import dcc, html, Input, Output, State, ALL
+from dash import dcc, html, Input, Output, State, ALL, callback_context
 import plotly.graph_objects as go
 import json
 
@@ -186,7 +186,7 @@ app.layout = html.Div([
     prevent_initial_call=True
 )
 def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers):
-    ctx = dash.callback_context
+    ctx = callback_context
 
     if stored_answers is None:
         stored_answers = {}
@@ -197,25 +197,31 @@ def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers)
 
     # Find which button was clicked
     button_clicked_idx = None
-    if ctx.triggered and 'submit-button' in ctx.triggered[0]['prop_id']:
-        # Check which button's n_clicks value changed
-        for i, n_clicks in enumerate(submit_clicks or []):
-            if n_clicks and n_clicks > 0:
-                # Check if this is a new click (comparing with stored state)
-                factor_key = list(investment_factors.keys())[i]
-                prev_clicks = stored_answers.get(f'{factor_key}_clicks', 0)
-                if n_clicks > prev_clicks:
-                    button_clicked_idx = i
-                    stored_answers[f'{factor_key}_clicks'] = n_clicks
-                    break
+    try:
+        if ctx.triggered and 'submit-button' in ctx.triggered[0]['prop_id']:
+            # Check which button's n_clicks value changed
+            submit_clicks = submit_clicks or []
+            for i, n_clicks in enumerate(submit_clicks):
+                if n_clicks and n_clicks > 0:
+                    # Check if this is a new click (comparing with stored state)
+                    factor_key = list(investment_factors.keys())[i]
+                    prev_clicks = stored_answers.get(f'{factor_key}_clicks', 0)
+                    if n_clicks > prev_clicks:
+                        button_clicked_idx = i
+                        stored_answers[f'{factor_key}_clicks'] = n_clicks
+                        break
+    except Exception as e:
+        print(f"Error processing button click: {e}")
+        # Continue with button_clicked_idx as None
 
     # Process answers
     feedback_outputs = []
     factor_keys = list(investment_factors.keys())
+    answers = answers or []  # Ensure answers is a list
 
     for i, factor_key in enumerate(factor_keys):
         # Check if this specific button was just clicked and has an answer
-        if button_clicked_idx == i and answers[i] is not None:
+        if button_clicked_idx == i and i < len(answers) and answers[i] is not None:
             user_answer = answers[i]
             correct_answer = investment_factors[factor_key]['correct']
 
