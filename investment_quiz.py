@@ -106,13 +106,13 @@ app.layout = html.Div([
             html.H3('Understanding Investment Demand', style={'color': '#3498db'}),
             html.P([
                 'Investment demand represents the relationship between the real interest rate and the quantity of investment goods demanded. ',
-                'The key principle is that firms compare the ', html.B('expected rate of return'),
-                ' from an investment project with the ', html.B('interest rate (cost of borrowing)'), '.'
+                'The key principle is that firms compare the ', html.B('expected returns'),
+                ' from an investment project with the ', html.B('expected costs (including borrowing costs)'), '.'
             ], style={'fontSize': '16px', 'lineHeight': '1.6'}),
             html.P([
-                'If Expected Return > Interest Rate → ', html.Span('Invest', style={'color': 'green', 'fontWeight': 'bold'}),
+                'If Expected Return > Expected Costs → ', html.Span('Invest', style={'color': 'green', 'fontWeight': 'bold'}),
                 html.Br(),
-                'If Expected Return < Interest Rate → ', html.Span('Don\'t Invest', style={'color': 'red', 'fontWeight': 'bold'})
+                'If Expected Return < Expected Costs → ', html.Span('Don\'t Invest', style={'color': 'red', 'fontWeight': 'bold'})
             ], style={'fontSize': '16px', 'backgroundColor': '#f0f8ff', 'padding': '15px', 'borderRadius': '5px', 'marginTop': '10px'}),
             html.P('Test your knowledge of how various factors shift the investment demand curve:',
                    style={'fontSize': '16px', 'marginTop': '15px'})
