@@ -196,12 +196,22 @@ def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers)
     if 'reset-button' in trigger_id:
         return [[] for _ in investment_factors], {}, create_progress_bar({}), create_summary({})
 
+    # Check which button was actually clicked
+    triggered_button = None
+    if 'submit-button' in trigger_id:
+        # Parse which specific button was clicked
+        import json
+        button_info = json.loads(trigger_id.split('.')[0])
+        if button_info.get('type') == 'submit-button':
+            triggered_button = button_info.get('index')
+
     # Process answers
     feedback_outputs = []
     factor_keys = list(investment_factors.keys())
 
     for i, factor_key in enumerate(factor_keys):
-        if answers[i] is not None and submit_clicks[i]:
+        # Check if this specific button was clicked and has an answer
+        if triggered_button == factor_key and answers[i] is not None:
             user_answer = answers[i]
             correct_answer = investment_factors[factor_key]['correct']
 
@@ -224,8 +234,8 @@ def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers)
                 ])
             feedback_outputs.append(feedback)
         else:
+            # Maintain existing feedback for other questions
             if factor_key in stored_answers:
-                # Maintain existing feedback
                 if stored_answers[factor_key] == 'correct':
                     feedback = html.Div([
                         html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
