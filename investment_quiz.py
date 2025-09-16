@@ -182,36 +182,40 @@ app.layout = html.Div([
     [Input({'type': 'submit-button', 'index': ALL}, 'n_clicks'),
      Input('reset-button', 'n_clicks')],
     [State({'type': 'quiz-radio', 'index': ALL}, 'value'),
-     State('answer-store', 'data')]
+     State('answer-store', 'data')],
+    prevent_initial_call=True
 )
 def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers):
     ctx = dash.callback_context
 
-    if not ctx.triggered:
-        return [[] for _ in investment_factors], {}, create_progress_bar({}), create_summary({})
-
-    trigger_id = ctx.triggered[0]['prop_id']
+    if stored_answers is None:
+        stored_answers = {}
 
     # Handle reset
-    if 'reset-button' in trigger_id:
+    if ctx.triggered and 'reset-button' in ctx.triggered[0]['prop_id']:
         return [[] for _ in investment_factors], {}, create_progress_bar({}), create_summary({})
 
-    # Check which button was actually clicked
-    triggered_button = None
-    if 'submit-button' in trigger_id:
-        # Parse which specific button was clicked
-        import json
-        button_info = json.loads(trigger_id.split('.')[0])
-        if button_info.get('type') == 'submit-button':
-            triggered_button = button_info.get('index')
+    # Find which button was clicked
+    button_clicked_idx = None
+    if ctx.triggered and 'submit-button' in ctx.triggered[0]['prop_id']:
+        # Check which button's n_clicks value changed
+        for i, n_clicks in enumerate(submit_clicks or []):
+            if n_clicks and n_clicks > 0:
+                # Check if this is a new click (comparing with stored state)
+                factor_key = list(investment_factors.keys())[i]
+                prev_clicks = stored_answers.get(f'{factor_key}_clicks', 0)
+                if n_clicks > prev_clicks:
+                    button_clicked_idx = i
+                    stored_answers[f'{factor_key}_clicks'] = n_clicks
+                    break
 
     # Process answers
     feedback_outputs = []
     factor_keys = list(investment_factors.keys())
 
     for i, factor_key in enumerate(factor_keys):
-        # Check if this specific button was clicked and has an answer
-        if triggered_button == factor_key and answers[i] is not None:
+        # Check if this specific button was just clicked and has an answer
+        if button_clicked_idx == i and answers[i] is not None:
             user_answer = answers[i]
             correct_answer = investment_factors[factor_key]['correct']
 
@@ -235,7 +239,7 @@ def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers)
             feedback_outputs.append(feedback)
         else:
             # Maintain existing feedback for other questions
-            if factor_key in stored_answers:
+            if factor_key in stored_answers and stored_answers[factor_key] in ['correct', 'incorrect']:
                 if stored_answers[factor_key] == 'correct':
                     feedback = html.Div([
                         html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
@@ -291,8 +295,10 @@ def show_hints(hint_clicks):
 
 def create_progress_bar(stored_answers):
     total = len(investment_factors)
-    correct = sum(1 for v in stored_answers.values() if v == 'correct')
-    incorrect = sum(1 for v in stored_answers.values() if v == 'incorrect')
+    # Filter out click counters from stored_answers
+    answer_values = {k: v for k, v in stored_answers.items() if not k.endswith('_clicks')}
+    correct = sum(1 for v in answer_values.values() if v == 'correct')
+    incorrect = sum(1 for v in answer_values.values() if v == 'incorrect')
     unanswered = total - correct - incorrect
 
     correct_pct = (correct / total) * 100
@@ -401,12 +407,15 @@ def create_money_pile(correct_answers):
     ])
 
 def create_summary(stored_answers):
-    if not stored_answers:
+    # Filter out click counters
+    answer_values = {k: v for k, v in stored_answers.items() if not k.endswith('_clicks')}
+
+    if not answer_values:
         return html.P('No answers submitted yet. Complete the quiz above to see your results!',
                      style={'color': '#7f8c8d', 'fontSize': '16px'})
 
     total = len(investment_factors)
-    correct = sum(1 for v in stored_answers.values() if v == 'correct')
+    correct = sum(1 for v in answer_values.values() if v == 'correct')
     score = (correct / total) * 100
 
     if score == 100:
