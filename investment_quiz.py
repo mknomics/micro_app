@@ -125,37 +125,39 @@ app.layout = html.Div([
         html.Div(id='progress-bar', style={'marginBottom': '20px'})
     ], style={'padding': '20px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'marginBottom': '20px'}),
 
-    # Quiz sections
+    # Single question display
     html.Div([
+        html.Div(id='question-display', children=[]),
+
+        # Navigation buttons
         html.Div([
-            # Create a quiz card for each factor
-            html.Div([
-                html.Div([
-                    html.H4(f'{i+1}. {factor_data["title"]}', style={'color': '#2c3e50', 'marginBottom': '10px'}),
-                    html.P(factor_data['description'], style={'color': '#7f8c8d', 'fontSize': '14px', 'marginBottom': '15px'}),
-                    html.P(factor_data['question'], style={'fontSize': '16px', 'fontWeight': 'bold', 'marginBottom': '15px'}),
-                    dcc.RadioItems(
-                        id={'type': 'quiz-radio', 'index': factor_key},
-                        options=factor_data['options'],
-                        style={'marginBottom': '15px'}
-                    ),
-                    html.Button('Submit Answer',
-                               id={'type': 'submit-button', 'index': factor_key},
-                               style={'padding': '8px 20px', 'backgroundColor': '#3498db', 'color': 'white',
-                                     'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
-                                     'fontSize': '14px', 'marginRight': '10px'}),
-                    html.Button('Show Hint',
-                               id={'type': 'hint-button', 'index': factor_key},
-                               style={'padding': '8px 20px', 'backgroundColor': '#95a5a6', 'color': 'white',
-                                     'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
-                                     'fontSize': '14px'}),
-                    html.Div(id={'type': 'feedback', 'index': factor_key}, style={'marginTop': '15px'}),
-                    html.Div(id={'type': 'hint', 'index': factor_key}, style={'marginTop': '10px'})
-                ], style={'backgroundColor': 'white', 'padding': '20px', 'borderRadius': '10px',
-                         'marginBottom': '20px', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)'})
-            ]) for i, (factor_key, factor_data) in enumerate(investment_factors.items())
-        ])
-    ], style={'padding': '20px'}),
+            html.Button('← Previous',
+                       id='prev-button',
+                       style={'padding': '10px 25px', 'backgroundColor': '#95a5a6', 'color': 'white',
+                             'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
+                             'fontSize': '16px', 'marginRight': '15px'}),
+            html.Button('Next →',
+                       id='next-button',
+                       style={'padding': '10px 25px', 'backgroundColor': '#3498db', 'color': 'white',
+                             'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
+                             'fontSize': '16px', 'marginRight': '15px'}),
+            html.Button('Submit Answer',
+                       id='submit-current-button',
+                       style={'padding': '10px 25px', 'backgroundColor': '#2ecc71', 'color': 'white',
+                             'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
+                             'fontSize': '16px', 'marginRight': '15px'}),
+            html.Button('Show Hint',
+                       id='hint-current-button',
+                       style={'padding': '10px 25px', 'backgroundColor': '#f39c12', 'color': 'white',
+                             'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer',
+                             'fontSize': '16px'})
+        ], style={'textAlign': 'center', 'marginTop': '30px'}),
+
+        # Feedback and hint areas
+        html.Div(id='current-feedback', style={'marginTop': '20px'}),
+        html.Div(id='current-hint', style={'marginTop': '10px'})
+
+    ], style={'padding': '20px', 'minHeight': '400px'}),
 
     # Summary section
     html.Div([
@@ -168,24 +170,83 @@ app.layout = html.Div([
     ], style={'padding': '20px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px',
               'marginTop': '20px', 'marginBottom': '40px'}),
 
-    # Store for tracking answers
-    dcc.Store(id='answer-store', data={})
+    # Store for tracking answers and current question
+    dcc.Store(id='answer-store', data={}),
+    dcc.Store(id='current-question', data=0)
 
 ], style={'padding': '20px', 'fontFamily': 'Arial, sans-serif', 'backgroundColor': '#ecf0f1'})
 
-# Callback for quiz submissions
+# Callback to display current question
 @app.callback(
-    [Output({'type': 'feedback', 'index': ALL}, 'children'),
+    [Output('question-display', 'children'),
+     Output('prev-button', 'disabled'),
+     Output('next-button', 'disabled'),
+     Output('current-question', 'data')],
+    [Input('prev-button', 'n_clicks'),
+     Input('next-button', 'n_clicks'),
+     Input('reset-button', 'n_clicks')],
+    [State('current-question', 'data'),
+     State('answer-store', 'data')]
+)
+def update_question_display(prev_clicks, next_clicks, reset_clicks, current_q, stored_answers):
+    ctx = callback_context
+
+    # Handle reset
+    if ctx.triggered and 'reset-button' in ctx.triggered[0]['prop_id']:
+        current_q = 0
+    elif ctx.triggered:
+        # Handle navigation
+        if 'prev-button' in ctx.triggered[0]['prop_id'] and current_q > 0:
+            current_q -= 1
+        elif 'next-button' in ctx.triggered[0]['prop_id'] and current_q < len(investment_factors) - 1:
+            current_q += 1
+
+    # Ensure current_q is valid
+    current_q = max(0, min(current_q, len(investment_factors) - 1))
+
+    # Get current question data
+    factor_keys = list(investment_factors.keys())
+    factor_key = factor_keys[current_q]
+    factor_data = investment_factors[factor_key]
+
+    # Create question display
+    question_content = html.Div([
+        html.Div([
+            html.H3(f'Question {current_q + 1} of {len(investment_factors)}',
+                   style={'color': '#3498db', 'textAlign': 'center', 'marginBottom': '20px'}),
+            html.H4(factor_data["title"], style={'color': '#2c3e50', 'marginBottom': '15px'}),
+            html.P(factor_data['description'], style={'color': '#7f8c8d', 'fontSize': '16px', 'marginBottom': '20px', 'lineHeight': '1.6'}),
+            html.P(factor_data['question'], style={'fontSize': '18px', 'fontWeight': 'bold', 'marginBottom': '20px', 'color': '#2c3e50'}),
+            dcc.RadioItems(
+                id='current-quiz-radio',
+                options=factor_data['options'],
+                value=stored_answers.get(factor_key) if stored_answers and factor_key in stored_answers and stored_answers[factor_key] not in ['correct', 'incorrect'] else None,
+                style={'fontSize': '16px', 'marginBottom': '20px'},
+                labelStyle={'display': 'block', 'marginBottom': '10px', 'cursor': 'pointer'}
+            )
+        ], style={'backgroundColor': 'white', 'padding': '30px', 'borderRadius': '15px',
+                 'boxShadow': '0 4px 8px rgba(0,0,0,0.1)', 'maxWidth': '800px', 'margin': '0 auto'})
+    ])
+
+    # Button states
+    prev_disabled = current_q == 0
+    next_disabled = current_q == len(investment_factors) - 1
+
+    return question_content, prev_disabled, next_disabled, current_q
+
+# Callback for answer submission
+@app.callback(
+    [Output('current-feedback', 'children'),
      Output('answer-store', 'data'),
      Output('progress-bar', 'children'),
      Output('summary-results', 'children')],
-    [Input({'type': 'submit-button', 'index': ALL}, 'n_clicks'),
+    [Input('submit-current-button', 'n_clicks'),
      Input('reset-button', 'n_clicks')],
-    [State({'type': 'quiz-radio', 'index': ALL}, 'value'),
-     State('answer-store', 'data')],
-    prevent_initial_call=True
+    [State('current-quiz-radio', 'value'),
+     State('current-question', 'data'),
+     State('answer-store', 'data')]
 )
-def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers):
+def handle_current_answer(submit_clicks, reset_clicks, answer, current_q, stored_answers):
     ctx = callback_context
 
     if stored_answers is None:
@@ -193,91 +254,50 @@ def handle_quiz_submissions(submit_clicks, reset_click, answers, stored_answers)
 
     # Handle reset
     if ctx.triggered and 'reset-button' in ctx.triggered[0]['prop_id']:
-        return [[] for _ in investment_factors], {}, create_progress_bar({}), create_summary({})
+        return [], {}, create_progress_bar({}), create_summary({})
 
-    # Find which button was clicked
-    button_clicked_idx = None
-    try:
-        if ctx.triggered and 'submit-button' in ctx.triggered[0]['prop_id']:
-            # Check which button's n_clicks value changed
-            submit_clicks = submit_clicks or []
-            for i, n_clicks in enumerate(submit_clicks):
-                if n_clicks and n_clicks > 0:
-                    # Check if this is a new click (comparing with stored state)
-                    factor_key = list(investment_factors.keys())[i]
-                    prev_clicks = stored_answers.get(f'{factor_key}_clicks', 0)
-                    if n_clicks > prev_clicks:
-                        button_clicked_idx = i
-                        stored_answers[f'{factor_key}_clicks'] = n_clicks
-                        break
-    except Exception as e:
-        print(f"Error processing button click: {e}")
-        # Continue with button_clicked_idx as None
+    feedback = []
 
-    # Process answers
-    feedback_outputs = []
-    factor_keys = list(investment_factors.keys())
-    answers = answers or []  # Ensure answers is a list
+    # Handle answer submission
+    if ctx.triggered and 'submit-current-button' in ctx.triggered[0]['prop_id'] and answer is not None:
+        factor_keys = list(investment_factors.keys())
+        factor_key = factor_keys[current_q]
+        correct_answer = investment_factors[factor_key]['correct']
 
-    for i, factor_key in enumerate(factor_keys):
-        # Check if this specific button was just clicked and has an answer
-        if button_clicked_idx == i and i < len(answers) and answers[i] is not None:
-            user_answer = answers[i]
-            correct_answer = investment_factors[factor_key]['correct']
-
-            if user_answer == correct_answer:
-                stored_answers[factor_key] = 'correct'
-                feedback = html.Div([
-                    html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
-                    html.P('Well done! You understand this concept.', style={'color': 'green'})
-                ])
-            else:
-                stored_answers[factor_key] = 'incorrect'
-                feedback = html.Div([
-                    html.P('✗ Incorrect', style={'color': 'red', 'fontWeight': 'bold', 'fontSize': '18px'}),
-                    html.Div([
-                        html.P('Explanation:', style={'fontWeight': 'bold', 'color': '#e74c3c'}),
-                        html.P(investment_factors[factor_key]['explanation'],
-                              style={'backgroundColor': '#ffe6e6', 'padding': '15px',
-                                    'borderRadius': '5px', 'lineHeight': '1.6'})
-                    ])
-                ])
-            feedback_outputs.append(feedback)
+        if answer == correct_answer:
+            stored_answers[factor_key] = 'correct'
+            feedback = html.Div([
+                html.P('✓ Correct!', style={'color': '#2ecc71', 'fontWeight': 'bold', 'fontSize': '24px', 'textAlign': 'center'}),
+                html.P('Excellent! You understand this concept.', style={'color': '#2ecc71', 'fontSize': '18px', 'textAlign': 'center'})
+            ], style={'backgroundColor': '#d5f4e6', 'padding': '20px', 'borderRadius': '10px', 'margin': '20px 0'})
         else:
-            # Maintain existing feedback for other questions
-            if factor_key in stored_answers and stored_answers[factor_key] in ['correct', 'incorrect']:
-                if stored_answers[factor_key] == 'correct':
-                    feedback = html.Div([
-                        html.P('✓ Correct!', style={'color': 'green', 'fontWeight': 'bold', 'fontSize': '18px'}),
-                        html.P('Well done! You understand this concept.', style={'color': 'green'})
-                    ])
-                else:
-                    feedback = html.Div([
-                        html.P('✗ Incorrect', style={'color': 'red', 'fontWeight': 'bold', 'fontSize': '18px'}),
-                        html.Div([
-                            html.P('Explanation:', style={'fontWeight': 'bold', 'color': '#e74c3c'}),
-                            html.P(investment_factors[factor_key]['explanation'],
-                                  style={'backgroundColor': '#ffe6e6', 'padding': '15px',
-                                        'borderRadius': '5px', 'lineHeight': '1.6'})
-                        ])
-                    ])
-                feedback_outputs.append(feedback)
-            else:
-                feedback_outputs.append([])
+            stored_answers[factor_key] = 'incorrect'
+            feedback = html.Div([
+                html.P('✗ Incorrect', style={'color': '#e74c3c', 'fontWeight': 'bold', 'fontSize': '24px', 'textAlign': 'center'}),
+                html.Div([
+                    html.P('Explanation:', style={'fontWeight': 'bold', 'color': '#e74c3c', 'marginBottom': '10px'}),
+                    html.P(investment_factors[factor_key]['explanation'],
+                          style={'lineHeight': '1.6', 'fontSize': '16px'})
+                ])
+            ], style={'backgroundColor': '#fdeaea', 'padding': '20px', 'borderRadius': '10px', 'margin': '20px 0'})
 
     progress_bar = create_progress_bar(stored_answers)
     summary = create_summary(stored_answers)
 
-    return feedback_outputs, stored_answers, progress_bar, summary
+    return feedback, stored_answers, progress_bar, summary
 
 # Callback for hints
 @app.callback(
-    Output({'type': 'hint', 'index': ALL}, 'children'),
-    [Input({'type': 'hint-button', 'index': ALL}, 'n_clicks')]
+    Output('current-hint', 'children'),
+    [Input('hint-current-button', 'n_clicks')],
+    [State('current-question', 'data')]
 )
-def show_hints(hint_clicks):
-    hints = []
+def show_current_hint(hint_clicks, current_q):
+    if not hint_clicks or hint_clicks == 0:
+        return []
+
     factor_keys = list(investment_factors.keys())
+    factor_key = factor_keys[current_q]
 
     hint_texts = {
         'acquisition_costs': 'Think about profitability: If costs go up, do profits go up or down?',
@@ -288,16 +308,10 @@ def show_hints(hint_clicks):
         'expectations': 'Investment is about the future - optimism or pessimism matters!'
     }
 
-    for i, factor_key in enumerate(factor_keys):
-        if hint_clicks[i] and hint_clicks[i] > 0:
-            hints.append(html.Div([
-                html.P('💡 Hint:', style={'fontWeight': 'bold', 'color': '#f39c12'}),
-                html.P(hint_texts[factor_key], style={'color': '#f39c12', 'fontStyle': 'italic'})
-            ], style={'backgroundColor': '#fff3cd', 'padding': '10px', 'borderRadius': '5px'}))
-        else:
-            hints.append([])
-
-    return hints
+    return html.Div([
+        html.P('💡 Hint:', style={'fontWeight': 'bold', 'color': '#f39c12', 'fontSize': '18px'}),
+        html.P(hint_texts[factor_key], style={'color': '#f39c12', 'fontStyle': 'italic', 'fontSize': '16px'})
+    ], style={'backgroundColor': '#fff3cd', 'padding': '15px', 'borderRadius': '10px', 'textAlign': 'center'})
 
 def create_progress_bar(stored_answers):
     total = len(investment_factors)
