@@ -376,7 +376,7 @@ def create_money_pile(correct_answers):
             })
         )
 
-    # Add floating animation for the top bill
+    # Make the top bill slightly brighter (no animation for now)
     if correct_answers > 0:
         bills[-1] = html.Div([
             html.Div('$100', style={
@@ -389,28 +389,24 @@ def create_money_pile(correct_answers):
             'bottom': f'{(correct_answers-1) * 15}px',
             'left': f'{50 + ((correct_answers-1) % 3 - 1) * 3}%',
             'transform': f'translateX(-50%) rotate({-3 + ((correct_answers-1) % 5) * 1.5}deg)',
-            'backgroundColor': '#85bb65',
-            'border': '2px solid #5a7c4e',
+            'backgroundColor': '#2ecc71',  # Brighter green for the top bill
+            'border': '2px solid #27ae60',
             'borderRadius': '3px',
             'padding': '8px 20px',
-            'boxShadow': '2px 2px 4px rgba(0,0,0,0.3)',
-            'zIndex': correct_answers-1,
-            'animation': 'float 2s ease-in-out infinite'
+            'boxShadow': '3px 3px 6px rgba(0,0,0,0.4)',  # Slightly stronger shadow
+            'zIndex': correct_answers-1
         })
 
+    # Add CSS animation as inline style for the floating bill
     return html.Div([
-        html.Style('''
-            @keyframes float {
-                0%, 100% { transform: translateX(-50%) translateY(0px) rotate(-2deg); }
-                50% { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
-            }
-        '''),
         html.Div(bills, style={
             'position': 'relative',
             'height': f'{max(150, correct_answers * 15 + 50)}px',
             'width': '100%'
         })
-    ])
+    ], style={
+        'position': 'relative'
+    })
 
 def create_summary(stored_answers):
     # Filter out click counters
