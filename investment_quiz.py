@@ -288,7 +288,19 @@ def create_progress_bar(stored_answers):
     correct_pct = (correct / total) * 100
     incorrect_pct = (incorrect / total) * 100
 
+    # Create money visualization
+    money_visual = create_money_pile(correct)
+
     return html.Div([
+        # Money pile visualization
+        html.Div([
+            html.H5('Your Investment Returns:', style={'color': '#2c3e50', 'marginBottom': '10px'}),
+            money_visual,
+            html.H3(f'Total Earned: ${correct * 100}',
+                   style={'textAlign': 'center', 'color': '#27ae60', 'marginTop': '10px'})
+        ], style={'marginBottom': '20px'}),
+
+        # Original progress stats
         html.Div([
             html.Span(f'Correct: {correct}', style={'color': 'green', 'marginRight': '20px'}),
             html.Span(f'Incorrect: {incorrect}', style={'color': 'red', 'marginRight': '20px'}),
@@ -303,6 +315,79 @@ def create_progress_bar(stored_answers):
                            'height': '20px', 'display': 'inline-block'})
         ], style={'width': '100%', 'backgroundColor': '#ecf0f1', 'borderRadius': '10px',
                   'overflow': 'hidden', 'marginTop': '10px'})
+    ])
+
+def create_money_pile(correct_answers):
+    """Create visual stack of money that grows with correct answers"""
+    if correct_answers == 0:
+        return html.Div([
+            html.P('💸 Start answering correctly to earn money!',
+                  style={'textAlign': 'center', 'fontSize': '18px', 'color': '#95a5a6'})
+        ], style={'height': '150px', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center'})
+
+    # Create stacked money bills
+    bills = []
+    for i in range(correct_answers):
+        # Calculate position and styling for each bill
+        bottom_position = i * 15
+        left_offset = 50 + (i % 3 - 1) * 3  # Slight horizontal variation
+        rotation = -3 + (i % 5) * 1.5  # Slight rotation variation
+
+        bills.append(
+            html.Div([
+                html.Div('$100', style={
+                    'color': 'white',
+                    'fontWeight': 'bold',
+                    'fontSize': '16px'
+                })
+            ], style={
+                'position': 'absolute',
+                'bottom': f'{bottom_position}px',
+                'left': f'{left_offset}%',
+                'transform': f'translateX(-50%) rotate({rotation}deg)',
+                'backgroundColor': '#85bb65',
+                'border': '2px solid #5a7c4e',
+                'borderRadius': '3px',
+                'padding': '8px 20px',
+                'boxShadow': '2px 2px 4px rgba(0,0,0,0.3)',
+                'zIndex': i
+            })
+        )
+
+    # Add floating animation for the top bill
+    if correct_answers > 0:
+        bills[-1] = html.Div([
+            html.Div('$100', style={
+                'color': 'white',
+                'fontWeight': 'bold',
+                'fontSize': '16px'
+            })
+        ], style={
+            'position': 'absolute',
+            'bottom': f'{(correct_answers-1) * 15}px',
+            'left': f'{50 + ((correct_answers-1) % 3 - 1) * 3}%',
+            'transform': f'translateX(-50%) rotate({-3 + ((correct_answers-1) % 5) * 1.5}deg)',
+            'backgroundColor': '#85bb65',
+            'border': '2px solid #5a7c4e',
+            'borderRadius': '3px',
+            'padding': '8px 20px',
+            'boxShadow': '2px 2px 4px rgba(0,0,0,0.3)',
+            'zIndex': correct_answers-1,
+            'animation': 'float 2s ease-in-out infinite'
+        })
+
+    return html.Div([
+        html.Style('''
+            @keyframes float {
+                0%, 100% { transform: translateX(-50%) translateY(0px) rotate(-2deg); }
+                50% { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
+            }
+        '''),
+        html.Div(bills, style={
+            'position': 'relative',
+            'height': f'{max(150, correct_answers * 15 + 50)}px',
+            'width': '100%'
+        })
     ])
 
 def create_summary(stored_answers):
@@ -327,10 +412,21 @@ def create_summary(stored_answers):
         message = 'Keep studying! Review the explanations carefully and try again.'
         color = '#e74c3c'
 
+    # Create portfolio growth visualization
+    portfolio_graph = create_portfolio_growth_chart(correct)
+
     return html.Div([
         html.H2(f'Your Score: {correct}/{total} ({score:.0f}%)',
                 style={'color': color, 'textAlign': 'center'}),
         html.P(message, style={'fontSize': '18px', 'textAlign': 'center', 'marginTop': '10px'}),
+
+        # Portfolio growth visualization
+        html.Div([
+            html.H4('Knowledge Pays: Your Investment Portfolio Growth',
+                   style={'textAlign': 'center', 'color': '#2c3e50', 'marginTop': '30px'}),
+            dcc.Graph(figure=portfolio_graph, config={'displayModeBar': False})
+        ]),
+
         html.Div([
             html.H5('Key Takeaways:', style={'marginTop': '20px', 'marginBottom': '10px'}),
             html.Ul([
@@ -341,6 +437,66 @@ def create_summary(stored_answers):
             ], style={'lineHeight': '1.8'})
         ], style={'backgroundColor': 'white', 'padding': '20px', 'borderRadius': '10px', 'marginTop': '20px'})
     ])
+
+def create_portfolio_growth_chart(correct_answers):
+    """Create a chart showing portfolio growth based on knowledge"""
+    import plotly.graph_objects as go
+
+    # Create data for visualization
+    years = list(range(11))  # 0 to 10 years
+    initial_investment = 10000
+
+    # Calculate returns based on correct answers
+    # More correct answers = better investment decisions = higher returns
+    knowledge_return_rate = 1 + (0.05 + (correct_answers * 0.02))  # 5% base + 2% per correct answer
+    no_knowledge_return = 1.03  # 3% return without knowledge
+
+    # Calculate portfolio values
+    educated_portfolio = [initial_investment * (knowledge_return_rate ** year) for year in years]
+    uneducated_portfolio = [initial_investment * (no_knowledge_return ** year) for year in years]
+
+    # Create the figure
+    fig = go.Figure()
+
+    # Add educated investor line
+    fig.add_trace(go.Scatter(
+        x=years,
+        y=educated_portfolio,
+        name=f'Your Portfolio ({correct_answers}/6 correct)',
+        line=dict(color='#27ae60', width=3),
+        fill='tonexty',
+        fillcolor='rgba(39, 174, 96, 0.2)',
+        hovertemplate='Year %{x}<br>Value: $%{y:,.0f}<extra></extra>'
+    ))
+
+    # Add baseline (no knowledge)
+    fig.add_trace(go.Scatter(
+        x=years,
+        y=uneducated_portfolio,
+        name='Without Knowledge',
+        line=dict(color='#95a5a6', width=2, dash='dash'),
+        hovertemplate='Year %{x}<br>Value: $%{y:,.0f}<extra></extra>'
+    ))
+
+    # Calculate profit difference
+    profit_10_years = educated_portfolio[-1] - uneducated_portfolio[-1]
+
+    fig.update_layout(
+        title=dict(
+            text=f'10-Year Profit from Knowledge: ${profit_10_years:,.0f}',
+            font=dict(size=16)
+        ),
+        xaxis=dict(title='Years', gridcolor='#ecf0f1'),
+        yaxis=dict(title='Portfolio Value ($)', gridcolor='#ecf0f1', tickformat='$,.0f'),
+        hovermode='x unified',
+        showlegend=True,
+        legend=dict(x=0.02, y=0.98),
+        plot_bgcolor='white',
+        height=400,
+        margin=dict(l=60, r=20, t=60, b=40)
+    )
+
+    return fig
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8051))
